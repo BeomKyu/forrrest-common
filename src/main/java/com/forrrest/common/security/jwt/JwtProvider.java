@@ -23,9 +23,9 @@ public class JwtProvider {
     private final long refreshTokenValidityInMilliseconds;
 
     public JwtProvider(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.access-token-validity}") long accessTokenValidity,
-            @Value("${jwt.refresh-token-validity}") long refreshTokenValidity) {
+        @Value("${jwt.secret}") String secret,
+        @Value("${jwt.access-token-validity}") long accessTokenValidity,
+        @Value("${jwt.refresh-token-validity}") long refreshTokenValidity) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.accessTokenValidityInMilliseconds = accessTokenValidity;
         this.refreshTokenValidityInMilliseconds = refreshTokenValidity;
@@ -45,11 +45,39 @@ public class JwtProvider {
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+            .setClaims(claims)
+            .setIssuedAt(now)
+            .setExpiration(validity)
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
+    }
+
+    public String createProfileAccessToken(String email, Long profileId) {
+        Claims claims = Jwts.claims().setSubject(email);
+        claims.put("profileId", profileId);
+        claims.put("type", "PROFILE");
+
+        return createTokenWithClaims(claims, accessTokenValidityInMilliseconds);
+    }
+
+    public String createProfileRefreshToken(String email, Long profileId) {
+        Claims claims = Jwts.claims().setSubject(email);
+        claims.put("profileId", profileId);
+        claims.put("type", "PROFILE");
+
+        return createTokenWithClaims(claims, refreshTokenValidityInMilliseconds);
+    }
+
+    private String createTokenWithClaims(Claims claims, long validityInMilliseconds) {
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + validityInMilliseconds);
+
+        return Jwts.builder()
+            .setClaims(claims)
+            .setIssuedAt(now)
+            .setExpiration(validity)
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
     }
 
     public Authentication getAuthentication(String token) {
@@ -70,9 +98,21 @@ public class JwtProvider {
 
     private Claims getClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+    }
+
+    public boolean isProfileToken(String token) {
+        return "PROFILE".equals(getClaims(token).get("type", String.class));
+    }
+
+    public Long getProfileId(String token) {
+        return getClaims(token).get("profileId", Long.class);
+    }
+
+    public long getAccessTokenValidityInMilliseconds() {
+        return accessTokenValidityInMilliseconds;
     }
 }
