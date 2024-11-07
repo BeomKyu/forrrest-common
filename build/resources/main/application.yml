@@ -1,0 +1,5 @@
+jwt:
+  secret: ${JWT_SECRET:c2VjcmV0a2V5Zm9yZGV2ZW52aXJvbm1lbnRzZWNyZXRrZXlmb3JkZXZlbnZpcm9ubWVudA==}  # Base64 인코딩된 문자열
+  accessTokenValidityInMilliseconds: 3600000
+  refreshTokenValidityInMilliseconds: 604800000
+  appTokenValidityInMilliseconds: 2592000000

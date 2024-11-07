@@ -1,9 +1,12 @@
 package com.forrrest.common.security.jwt;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,31 +15,30 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 
+import com.forrrest.common.security.config.JwtProperties;
 import com.forrrest.common.security.userdetails.CustomUserDetails;
 
 @Slf4j
+@Getter
 @Component
+@RequiredArgsConstructor
 public class JwtProvider {
 
-    private final Key key;
-    private final long accessTokenValidityInMilliseconds;
-    private final long refreshTokenValidityInMilliseconds;
+    private final JwtProperties jwtProperties;
+    private Key key;
 
-    public JwtProvider(
-        @Value("${jwt.secret}") String secret,
-        @Value("${jwt.access-token-validity}") long accessTokenValidity,
-        @Value("${jwt.refresh-token-validity}") long refreshTokenValidity) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        this.accessTokenValidityInMilliseconds = accessTokenValidity;
-        this.refreshTokenValidityInMilliseconds = refreshTokenValidity;
+    @PostConstruct
+    protected void init() {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecret());
+        this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String createAccessToken(String email) {
-        return createToken(email, accessTokenValidityInMilliseconds);
+        return createToken(email, jwtProperties.getAccessTokenValidityInMilliseconds());
     }
 
     public String createRefreshToken(String email) {
-        return createToken(email, refreshTokenValidityInMilliseconds);
+        return createToken(email, jwtProperties.getRefreshTokenValidityInMilliseconds());
     }
 
     private String createToken(String email, long validityInMilliseconds) {
@@ -57,7 +59,7 @@ public class JwtProvider {
         claims.put("profileId", profileId);
         claims.put("type", "PROFILE");
 
-        return createTokenWithClaims(claims, accessTokenValidityInMilliseconds);
+        return createTokenWithClaims(claims, jwtProperties.getAccessTokenValidityInMilliseconds());
     }
 
     public String createProfileRefreshToken(String email, Long profileId) {
@@ -65,7 +67,7 @@ public class JwtProvider {
         claims.put("profileId", profileId);
         claims.put("type", "PROFILE");
 
-        return createTokenWithClaims(claims, refreshTokenValidityInMilliseconds);
+        return createTokenWithClaims(claims, jwtProperties.getRefreshTokenValidityInMilliseconds());
     }
 
     private String createTokenWithClaims(Claims claims, long validityInMilliseconds) {
@@ -96,7 +98,7 @@ public class JwtProvider {
         }
     }
 
-    private Claims getClaims(String token) {
+    public Claims getClaims(String token) {
         return Jwts.parserBuilder()
             .setSigningKey(key)
             .build()
@@ -112,7 +114,25 @@ public class JwtProvider {
         return getClaims(token).get("profileId", Long.class);
     }
 
-    public long getAccessTokenValidityInMilliseconds() {
-        return accessTokenValidityInMilliseconds;
+    public String createAppToken(String clientId, Long profileId) {
+        Claims claims = Jwts.claims()
+            .setAudience(clientId)
+            .setSubject(profileId.toString());
+            
+        return Jwts.builder()
+            .setClaims(claims)
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(new Date().getTime() + jwtProperties.getAppTokenValidityInMilliseconds()))
+            .signWith(key, SignatureAlgorithm.HS512)
+            .compact();
+    }
+    
+    public boolean validateAppToken(String token, String clientId) {
+        try {
+            Claims claims = getClaims(token);
+            return claims.getAudience().equals(clientId);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
