@@ -58,7 +58,7 @@ public abstract class AbstractTokenFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         return Arrays.stream(pathPatterns)
-            .anyMatch(pattern -> path.startsWith(pattern));
+            .noneMatch(path::startsWith);
     }
 
     protected abstract TokenType getExpectedTokenType();
