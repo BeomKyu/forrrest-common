@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-@Component
+@Component("jwtTokenProvider")
 @RequiredArgsConstructor
 public class JwtTokenProvider implements TokenProvider {
     private final TokenProperties tokenProperties;

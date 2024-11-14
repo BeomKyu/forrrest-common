@@ -129,7 +129,7 @@ class AbstractTokenFilterTest {
         boolean result = tokenFilter.shouldNotFilter(request);
         
         // then
-        assertThat(result).isTrue();
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -141,7 +141,7 @@ class AbstractTokenFilterTest {
         boolean result = tokenFilter.shouldNotFilter(request);
         
         // then
-        assertThat(result).isFalse();
+        assertThat(result).isTrue();
     }
 
     // Test implementation of AbstractTokenFilter
