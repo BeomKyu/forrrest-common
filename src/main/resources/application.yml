@@ -6,3 +6,6 @@ token:
     PROFILE_ACCESS: 3600000     # 1시간
     PROFILE_REFRESH: 604800000  # 7일
     NONCE: 300000              # 5분
+
+
+    ################
