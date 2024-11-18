@@ -1,7 +1,7 @@
 package com.forrrest.common.security.token;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.Authentication;
 
@@ -30,8 +30,11 @@ import io.jsonwebtoken.security.Keys;
 
 @SpringBootTest(classes = TestConfig.class)
 class TokenProviderTest {
-    @Autowired
-    private TokenProvider tokenProvider;
+    private final TokenProvider tokenProvider;
+
+    TokenProviderTest(@Qualifier("jwtTokenProvider")TokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
+    }
 
     @Test
     void createToken_ShouldGenerateValidToken() {
