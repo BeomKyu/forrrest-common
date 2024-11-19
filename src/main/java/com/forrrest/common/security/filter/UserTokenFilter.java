@@ -10,11 +10,6 @@ import com.forrrest.common.security.token.TokenType;
 @Component
 public class UserTokenFilter extends AbstractTokenFilter {
 
-
-
-
-
-
     public UserTokenFilter(@Qualifier("jwtTokenProvider")TokenProvider tokenProvider,
         @Value("${security.token.user-paths}") String[] pathPatterns) {
         super(tokenProvider, pathPatterns);
