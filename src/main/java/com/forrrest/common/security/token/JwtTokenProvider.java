@@ -122,8 +122,8 @@ public class JwtTokenProvider implements TokenProvider {
         try {
             TokenType type = TokenType.valueOf(tokenType);
             return switch (type) {
-                case USER_ACCESS -> new UserTokenAuthentication(userDetails, token);
-                case PROFILE_ACCESS -> new ProfileTokenAuthentication(userDetails, token);
+                case USER_ACCESS, USER_REFRESH -> new UserTokenAuthentication(userDetails, token);
+                case PROFILE_ACCESS, PROFILE_REFRESH -> new ProfileTokenAuthentication(userDetails, token);
                 case NONCE -> new NonceTokenAuthentication(userDetails, token);
                 default -> throw new TokenException(TokenExceptionType.WRONG_TYPE);
             };
