@@ -11,6 +11,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 @Component("jwtTokenProvider")
 @RequiredArgsConstructor
+@Slf4j
 public class JwtTokenProvider implements TokenProvider {
     private final TokenProperties tokenProperties;
 
@@ -116,8 +118,11 @@ public class JwtTokenProvider implements TokenProvider {
 
         String tokenType = claims.get("tokenType", String.class);
         if (tokenType == null) {
+            log.debug("getAuthentication tokenType null exception : {}", tokenType);
             throw new TokenException(TokenExceptionType.WRONG_TYPE);
         }
+        log.info("getAuthentication tokenType : {}", tokenType);
+        log.info("getAuthentication claims : {}", claims);
 
         try {
             TokenType type = TokenType.valueOf(tokenType);
@@ -128,6 +133,8 @@ public class JwtTokenProvider implements TokenProvider {
                 default -> throw new TokenException(TokenExceptionType.WRONG_TYPE);
             };
         } catch (IllegalArgumentException e) {
+            log.debug("getAuthentication IllegalArgumentException token : {}", token);
+            log.debug("getAuthentication IllegalArgumentException claims : {}", claims);
             throw new TokenException(TokenExceptionType.WRONG_TYPE);
         }
     }
