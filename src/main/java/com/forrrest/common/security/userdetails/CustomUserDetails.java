@@ -18,6 +18,7 @@ public class CustomUserDetails implements UserDetails {
     private final String username;
     private final List<String> roles;
     private final boolean enabled;
+    private final String clientId;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

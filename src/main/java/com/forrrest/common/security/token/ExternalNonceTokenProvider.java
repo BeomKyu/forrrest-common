@@ -108,6 +108,7 @@ public class ExternalNonceTokenProvider implements TokenProvider{
             .username(claims.get("username", String.class))
             .roles(claims.get("roles", List.class))
             .enabled(true)
+            .clientId(claims.get("username", String.class))
             .build();
 
         String tokenType = claims.get("tokenType", String.class);
