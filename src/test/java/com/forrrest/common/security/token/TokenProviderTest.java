@@ -5,10 +5,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.Authentication;
 
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Base64;
 import java.security.Key;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +26,6 @@ import com.forrrest.common.security.userdetails.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 
 @SpringBootTest(classes = TestConfig.class)
 class TokenProviderTest {
@@ -75,7 +74,7 @@ class TokenProviderTest {
     }
 
     @Test
-    void validateToken_ShouldThrowExpiredTokenException() {
+    void validateToken_ShouldThrowExpiredTokenException() throws Exception {
         // given
         String token = createExpiredToken();
 
@@ -108,14 +107,14 @@ class TokenProviderTest {
     }
 
     @Test
-    void validateTokenType_ShouldThrowWrongTypeException() {
+    void validateTokenType_ShouldThrowWrongTypeException() throws Exception {
         // given
         String token = Jwts.builder()
             .setSubject("test-user")
             .setIssuedAt(new Date())
             .setExpiration(new Date(System.currentTimeMillis() + 3600000))
             .claim("tokenType", "INVALID_TYPE") // 잘못된 토큰 타입
-            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+            .signWith(getSigningKey_viaReflection(), SignatureAlgorithm.HS256)
             .compact();
 
         // when & then
@@ -138,7 +137,7 @@ class TokenProviderTest {
             .hasFieldOrPropertyWithValue("type", TokenExceptionType.EMPTY_CLAIMS);
     }
 
-    private String createExpiredToken() {
+    private String createExpiredToken() throws Exception {
         Date now = new Date();
         Date expiration = new Date(now.getTime() - 1000); // 이미 만료된 시간
 
@@ -147,14 +146,24 @@ class TokenProviderTest {
             .setIssuedAt(now)
             .setExpiration(expiration)
             .claim("tokenType", TokenType.USER_ACCESS.name())
-            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+            .signWith(getSigningKey_viaReflection(), SignatureAlgorithm.HS256)
             .compact();
     }
 
-    private Key getSigningKey() {
-        // Base64로 인코딩된 시크릿 키
-        String secret = "dGVzdC1zZWNyZXQta2V5LXRoYXQtaXMtbG9uZy1lbm91Z2gtZm9yLWEtdmFsaWQtaHMyNTYtc2lnbmluZy1rZXk=";
-        byte[] keyBytes = Base64.getDecoder().decode(secret);
-        return Keys.hmacShaKeyFor(keyBytes);
+//    private Key getSigningKey() {
+//        // Base64로 인코딩된 시크릿 키
+//        String secret = "dGVzdC1zZWNyZXQta2V5LXRoYXQtaXMtbG9uZy1lbm91Z2gtZm9yLWEtdmFsaWQtaHMyNTYtc2lnbmluZy1rZXk=";
+//        byte[] keyBytes = Base64.getDecoder().decode(secret);
+//        return Keys.hmacShaKeyFor(keyBytes);
+//    }
+
+    Key getSigningKey_viaReflection() throws Exception {
+        // 1. private 메서드 객체 얻기
+        Method getKeyMethod = JwtTokenProvider.class.getDeclaredMethod("getSigningKey");
+        // 2. 접근 권한 해제
+        getKeyMethod.setAccessible(true);
+        // 3. 메서드 실행 및 반환값 받기
+        // (필요 시 추가 검증)
+        return (Key) getKeyMethod.invoke(tokenProvider);
     }
 }

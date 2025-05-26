@@ -1,5 +1,9 @@
 token:
-  secret: "dGVzdC1zZWNyZXQta2V5LXRoYXQtaXMtbG9uZy1lbm91Z2gtZm9yLWEtdmFsaWQtaHMyNTYtc2lnbmluZy1rZXk="
+  keys: # key id 와 secret 을 담을 수 있는 구조만 정의
+    key_v1:
+      id: key_v1
+      secret: ${TOKEN_KEY_V1_SECRET:c2VjcmV0a2V5Zm9yZGV2ZW52aXJvbm1lbnRzZWNyZXRrZXlmb3JkZXZlbnZpcm9ubWVudA==}
+  current-key-id: key_v1
   validity:
     USER_ACCESS: 3600000
     USER_REFRESH: 86400000
