@@ -11,7 +11,8 @@ public enum TokenExceptionType {
     INVALID_TOKEN("잘못된 토큰입니다"),
     UNSUPPORTED_TOKEN("지원하지 않는 토큰입니다"),
     WRONG_TYPE("잘못된 토큰 타입입니다"),
-    EMPTY_CLAIMS("토큰 클레임이 비어있습니다");
+    EMPTY_CLAIMS("토큰 클레임이 비어있습니다"),
+    EMPTY_SIGNATURE("서명이 없습니다.");
 
     private final String message;
 }

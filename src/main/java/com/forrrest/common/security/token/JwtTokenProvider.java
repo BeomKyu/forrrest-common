@@ -27,7 +27,14 @@ public class JwtTokenProvider implements TokenProvider {
     private final TokenProperties tokenProperties;
 
     private Key getSigningKey() {
-        byte[] keyBytes = Base64.getDecoder().decode(tokenProperties.getSecret());
+        TokenProperties.Key key = tokenProperties
+                .getKeys()
+                .get(tokenProperties.getCurrentKeyId());
+        if (key == null) {
+            throw new EmptySignatureException(TokenExceptionType.EMPTY_SIGNATURE);
+        }
+
+        byte[] keyBytes = Base64.getDecoder().decode(key.getSecret());
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

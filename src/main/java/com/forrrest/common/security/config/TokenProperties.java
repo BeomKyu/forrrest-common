@@ -1,7 +1,6 @@
 package com.forrrest.common.security.config;
 
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.*;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +13,17 @@ import com.forrrest.common.security.token.TokenType;
 @Component
 @Getter @Setter
 public class TokenProperties {
-    private String secret;
+    private Map<String, Key> keys = new HashMap<>();
+    private String currentKeyId;
+
+    @Getter
+    @Setter
+    public static class Key {
+        /** JWT 헤더의 kid 필드에 매핑될 Key ID */
+        private String id;
+        /** HMAC 알고리즘용 비밀 키(인코딩된 문자열) */
+        private String secret;
+    }
+
     private Map<TokenType, Long> validity = new EnumMap<>(TokenType.class);
 }
