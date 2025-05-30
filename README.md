@@ -1,60 +1,73 @@
-# **Forrrest Common Module Overview**
+# Forrrest-common 모듈 기획서
 
-- Forrrest Common은 마이크로서비스 아키텍처에서 공통으로 사용되는 보안 컴포넌트들을 제공하는 모듈입니다.
+## 1. 모듈 개요
 
-## *Security Features*
+Forrrest-common 모듈은 프로젝트 전반에서 재사용 가능한 공통 기능을 제공하여 유지보수성과 일관성을 높이는 역할을 합니다. 주요 책임은 인증·인가, 설정 바인딩, 유틸리티, 예외 처리 프레임워크 제공입니다.
 
-- Token-based Authentication
-- JWT(JSON Web Token) 기반의 인증 시스템을 구현하며, 다음과 같은 토큰 타입을 지원합니다:
+## 2. 현재 기능
 
-```
-  public enum TokenType {
-    USER_ACCESS,    // 일반 사용자 접근 토큰
-    USER_REFRESH,   // 일반 사용자 갱신 토큰
-    PROFILE_ACCESS, // 프로필 접근 토큰
-    PROFILE_REFRESH,// 프로필 갱신 토큰
-    NONCE          // 일회성 토큰
+### 2.1 JWT 관리
 
-}
-```
+* **토큰 생성**: JWT 발급 로직 지원
+* **검증 및 파싱**: 서명 검증(Signature)과 클레임(Claims) 추출 기능 제공
 
-## *Core Components*
+### 2.2 Spring Security 통합
 
-### 1. Token Provider
-- TokenProvider 인터페이스와 JwtTokenProvider 구현체
-- 토큰 생성, 검증, 파싱 등의 기능 제공
-- 토큰 타입별 유효성 검사 지원
+* **JwtAuthenticationFilter**: 요청 헤더의 JWT를 파싱하여 `SecurityContext`에 인증 정보 설정
 
+### 2.3 설정 프로퍼티 바인딩
 
-### 2. Authentication
-- TokenAuthentication 추상 클래스를 기반으로 한 타입별 인증 객체:
-- UserTokenAuthentication
-- ProfileTokenAuthentication
-- NonceTokenAuthentication
-- Spring Security의 Authentication 인터페이스 구현
-### 3. Filters
-- AbstractTokenFilter를 상속한 토큰 타입별 필터:
-- UserTokenFilter: 일반 사용자 접근 관리
-- ProfileTokenFilter: 프로필 접근 관리
-- NonceTokenFilter: 일회성 토큰 관리
-- 설정된 경로 패턴에 따라 필터링 수행
-### 4. Exception Handling
-- TokenExceptionHandler를 통한 중앙 집중식 예외 처리
-- 토큰 관련 예외 발생 시 적절한 HTTP 응답 생성
-- Configuration
-- 필터별 경로 패턴은 application.properties/yaml에서 설정:
+* 'token.keys': 키 아이디와 비밀값을 Map 구조로 바인딩
+* 'token.current-key-id': 현재 사용 중인 키 식별자 설정
 
-```
-security:
-  token:
-    user-paths: /api/users/**
-    profile-paths: /api/profiles/**
-    nonce-paths: /api/nonce/**
-  ```
-## *Usage Example*
-### Security Flow
-1. 클라이언트가 요청과 함께 Bearer 토큰 전송
-2. 해당 경로에 맞는 필터가 토큰 검증
-3. 토큰이 유효한 경우 SecurityContext에 인증 정보 설정
-4. 예외 발생 시 TokenExceptionHandler가 처리
-- 이 모듈은 Spring Security와 JWT를 기반으로 하며, 마이크로서비스 간 일관된 보안 정책을 제공합니다.
+### 2.4 공통 유틸리티 및 예외 처리
+
+* **날짜·시간 헬퍼**: 표준화된 날짜 포맷 변환 도구
+* **예외 메시지 포맷터**: 일관된 에러 코드 및 메시지 구조 지원
+* **상수 관리**: 전역 상수 정의
+
+## 3. 예정 기능
+
+### 3.1 공통 유틸리티 및 예외 처리
+
+* **날짜·시간 헬퍼**: 표준화된 날짜 포맷 변환 도구
+* **예외 메시지 포맷터**: 일관된 에러 코드 및 메시지 구조 지원
+* **상수 관리**: 전역 상수 정의
+
+### 3.2 서명 키 로테이션 (Key Rotation)
+
+* 다중 `kid` 관리 및 순차 교체(Grace Period) 지원
+
+### 3.3 동적 설정 (Dynamic Configuration)
+
+* Spring Cloud Config 연동으로 런타임 설정 반영
+
+### 3.4 예외 처리 프레임워크 강화
+
+* 글로벌 예외 핸들러, 커스텀 예외 계층 구조 설계
+
+### 3.5 응답 래퍼(Response Wrapper)
+
+* 표준화된 API 응답 형식 제공(JSON envelope)
+
+### 3.6 로깅 및 분산 추적
+
+* Spring Cloud Sleuth 또는 Zipkin 연동
+* 구조화된 로그 포맷 및 트레이스 ID 자동 삽입
+
+### 3.7 메트릭 수집
+
+* Prometheus 클라이언트 통합으로 주요 지표(요청 수, 에러율) 수집
+
+### 3.8 테스트 커버리지 목표
+
+* 단위·통합 테스트 작성으로 90% 이상 커버리지 달성
+
+## 4. 목표 및 기대 효과
+
+* **중복 제거**: 핵심 로직을 공통 모듈로 중앙화하여 코드 중복 최소화
+* **유지보수성 향상**: 공통 컴포넌트 업데이트 시 전체 서비스에 일관된 적용
+* **보안 강화**: 표준화된 인증·인가 구현으로 안전한 토큰 관리 보장
+* **개발 생산성 개선**: 기본 인프라 기능 제공으로 신규 서비스 개발 속도 가속
+
+---
